@@ -1,11 +1,11 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts       #-}
+{-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE OverloadedStrings      #-}
+{-# LANGUAGE TemplateHaskell        #-}
 
-module Bio.Data.Types
+module Bio.Data.Experiment.Types
     ( FileType(..)
     , File(..)
     , emptyFile
@@ -20,18 +20,17 @@ module Bio.Data.Types
     , target
     , files
     , info
-    , guessFormat
     ) where
 
-import Data.Aeson
-import Data.Aeson.TH (deriveJSON, defaultOptions)
-import qualified Data.ByteString as B
+import           Control.Lens          (makeFields, (.~), (^.))
+import           Crypto.Hash.MD5       (hash)
+import           Data.Aeson
+import           Data.Aeson.TH         (defaultOptions, deriveJSON)
+import qualified Data.ByteString       as B
 import qualified Data.ByteString.Char8 as BC
-import qualified Data.Text as T
-import Control.Lens (makeFields, (^.), (.~))
-import qualified Data.HashMap.Strict as M
-import Crypto.Hash.MD5 (hash)
-import Numeric (showHex)
+import qualified Data.Map.Strict       as M
+import qualified Data.Text             as T
+import           Numeric               (showHex)
 
 data FileType = BamFile
               | BaiFile
@@ -44,15 +43,15 @@ data FileType = BamFile
               | NarrowPeakFile
               | BroadPeakFile
               | Other
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Ord)
 
 data File = File
-    { fileLocation :: !FilePath
+    { fileLocation    :: !FilePath
     , fileReplication :: !Int
-    , fileFormat :: !FileType
-    , fileKeywords :: ![String]
-    , fileInfo :: !(M.HashMap String String)
-    } deriving (Show, Read, Eq)
+    , fileFormat      :: !FileType
+    , fileKeywords    :: ![T.Text]
+    , fileInfo        :: !(M.Map T.Text T.Text)
+    } deriving (Show, Read, Eq, Ord)
 
 makeFields ''File
 
@@ -66,13 +65,13 @@ emptyFile = File
     }
 
 data Experiment = Experiment
-    { experimentEid :: !String
-    , experimentCelltype :: !String
-    , experimentTarget :: !String
-    , experimentFiles :: ![File]
-    , experimentInfo :: !(M.HashMap String String)
-    , experimentControl :: !(Maybe String)
-    } deriving (Show, Read, Eq)
+    { experimentEid      :: !T.Text
+    , experimentCelltype :: !T.Text
+    , experimentTarget   :: !T.Text
+    , experimentFiles    :: ![File]
+    , experimentInfo     :: !(M.Map T.Text T.Text)
+    , experimentControl  :: !(Maybe T.Text)
+    } deriving (Show, Read, Eq, Ord)
 
 makeFields ''Experiment
 
@@ -90,8 +89,8 @@ instance FromJSON File where
 instance FromJSON Experiment where
     parseJSON (Object obj) = do
         fls <- obj .: "files"
-        let eid' = concat . map (flip showHex "") $ B.unpack $ hash $ BC.pack $
-                   unlines $ map (^.location) fls
+        let eid' = T.pack $ concat $ map (flip showHex "") $ B.unpack $ hash $
+                   BC.pack $ unlines $ map (^.location) fls
         Experiment <$> obj .:? "id" .!= eid' <*>
                        obj .:? "celltype" .!= "" <*>
                        obj .: "target" <*>
@@ -102,6 +101,7 @@ instance FromJSON Experiment where
 guessFormat :: FilePath -> FileType
 guessFormat fl = case () of
     _ | ".bam" `T.isSuffixOf` fl' -> BamFile
+      | ".bai" `T.isSuffixOf` fl' -> BaiFile
       | ".bed" `T.isSuffixOf` fl' -> BedFile
       | ".bed.gz" `T.isSuffixOf` fl' -> BedGZip
       | ".fastq" `T.isSuffixOf` fl' -> FastqFile
