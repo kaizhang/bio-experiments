@@ -23,11 +23,13 @@ library
       base >= 4.0 && < 5
     , aeson
     , bytestring
+    , cereal
     , cryptohash
     , data-ordlist
     , text
     , containers
     , lens
+    , yaml
 
   default-language:    Haskell2010
 

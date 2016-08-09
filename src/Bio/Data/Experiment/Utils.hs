@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Bio.Data.Experiment.Utils where
 
@@ -9,6 +9,7 @@ import           Data.List.Ordered         (nubSort)
 import qualified Data.Map.Strict           as M
 import           Data.Ord                  (comparing)
 import qualified Data.Text                 as T
+import           Data.Yaml                 (decodeFile)
 
 import           Bio.Data.Experiment.Types
 
@@ -33,3 +34,6 @@ splitExp :: [Experiment] -> [Experiment]
 splitExp es = flip concatMap es $ \e -> zipWith f (repeat e) $ e^.files
   where
     f e x = files .~ [x] $ e
+
+readExp :: FilePath -> IO (Maybe [Experiment])
+readExp = decodeFile
