@@ -14,6 +14,10 @@ module Bio.Data.Experiment.Types
     , replication
     , format
     , keywords
+    , ChIP_Seq
+    , ATAC_Seq
+    , RNA_Seq
+    , IsDNASeq(..)
     , Experiment(..)
     , eid
     , control
@@ -69,7 +73,15 @@ emptyFile = File
     , fileInfo = M.empty
     }
 
-data Experiment = Experiment
+data ChIP_Seq
+data ATAC_Seq
+data RNA_Seq
+
+class IsDNASeq a
+instance IsDNASeq ChIP_Seq
+instance IsDNASeq ATAC_Seq
+
+data Experiment a = Experiment
     { experimentEid      :: !T.Text
     , experimentCelltype :: !T.Text
     , experimentTarget   :: !T.Text
@@ -105,7 +117,7 @@ instance ToJSON File where
     toJSON     = genericToJSON fileOpt
     toEncoding = genericToEncoding fileOpt
 
-instance FromJSON Experiment where
+instance FromJSON (Experiment a) where
     parseJSON (Object obj) = do
         fls <- obj .: "files"
         let eid' = T.pack $ concat $ map (flip showHex "") $ B.unpack $ hash $
@@ -129,7 +141,7 @@ expOpt = defaultOptions{fieldLabelModifier=f}
         , ("experimentFiles", "files")
         ]
 
-instance ToJSON Experiment where
+instance ToJSON (Experiment a) where
     toJSON     = genericToJSON expOpt
     toEncoding = genericToEncoding expOpt
 
@@ -139,7 +151,7 @@ instance Serialize T.Text where
 
 instance Serialize FileType
 instance Serialize File
-instance Serialize Experiment
+instance Serialize (Experiment a)
 
 
 guessFormat :: FilePath -> FileType
