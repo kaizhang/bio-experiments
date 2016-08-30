@@ -100,7 +100,7 @@ instance FromJSON File where
         File <$> return path <*>
                  obj .:? "rep" .!= 1 <*>
                  obj .:? "format" .!= guessFormat path <*>
-                 return [] <*>
+                 obj .:? "fileKeywords" .!= [] <*>
                  return M.empty
 
 fileOpt :: Options
