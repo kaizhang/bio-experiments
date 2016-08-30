@@ -101,7 +101,7 @@ instance FromJSON File where
                  obj .:? "rep" .!= 1 <*>
                  obj .:? "format" .!= guessFormat path <*>
                  obj .:? "fileKeywords" .!= [] <*>
-                 return M.empty
+                 obj .:? "fileInfo" .!= M.empty
 
 fileOpt :: Options
 fileOpt = defaultOptions{fieldLabelModifier=f}
@@ -126,7 +126,7 @@ instance FromJSON (Experiment a) where
                        obj .:? "celltype" .!= "" <*>
                        obj .: "target" <*>
                        return fls <*>
-                       return M.empty <*>
+                       obj .:? "experimentInfo" .!= M.empty <*>
                        obj .:? "control"
 
 expOpt :: Options
