@@ -25,8 +25,10 @@ module Bio.Data.Experiment.Types
     , target
     , files
     , info
+    , groupName
     ) where
 
+import           Control.Arrow         (first)
 import           Control.Lens          (makeFields, (.~), (^.))
 import           Crypto.Hash.MD5       (hash)
 import           Data.Aeson
@@ -34,6 +36,7 @@ import           Data.Aeson.TH         (Options, defaultOptions, deriveJSON,
                                         fieldLabelModifier)
 import qualified Data.ByteString       as B
 import qualified Data.ByteString.Char8 as BC
+import qualified Data.HashMap.Strict   as HM
 import qualified Data.Map.Strict       as M
 import           Data.Serialize        (Serialize (..))
 import qualified Data.Text             as T
@@ -82,12 +85,13 @@ instance IsDNASeq ChIP_Seq
 instance IsDNASeq ATAC_Seq
 
 data Experiment a = Experiment
-    { experimentEid      :: !T.Text
-    , experimentCelltype :: !T.Text
-    , experimentTarget   :: !T.Text
-    , experimentFiles    :: ![File]
-    , experimentInfo     :: !(M.Map T.Text T.Text)
-    , experimentControl  :: !(Maybe T.Text)
+    { experimentEid       :: !T.Text
+    , experimentCelltype  :: !T.Text
+    , experimentTarget    :: !T.Text
+    , experimentFiles     :: ![File]
+    , experimentInfo      :: !(M.Map T.Text T.Text)
+    , experimentControl   :: !(Maybe T.Text)
+    , experimentGroupName :: !(Maybe T.Text)
     } deriving (Show, Read, Eq, Ord, Generic)
 
 makeFields ''Experiment
@@ -95,13 +99,14 @@ makeFields ''Experiment
 deriveJSON defaultOptions ''FileType
 
 instance FromJSON File where
-    parseJSON (Object obj) = do
+    parseJSON (Object obj') = do
+        let obj = HM.fromList $ map (first T.toLower) $ HM.toList obj'
         path <- obj .: "path"
         File <$> return path <*>
                  obj .:? "rep" .!= 1 <*>
                  obj .:? "format" .!= guessFormat path <*>
-                 obj .:? "fileKeywords" .!= [] <*>
-                 obj .:? "fileInfo" .!= M.empty
+                 obj .:? "filekeywords" .!= [] <*>
+                 obj .:? "fileinfo" .!= M.empty
 
 fileOpt :: Options
 fileOpt = defaultOptions{fieldLabelModifier=f}
@@ -118,7 +123,8 @@ instance ToJSON File where
     toEncoding = genericToEncoding fileOpt
 
 instance FromJSON (Experiment a) where
-    parseJSON (Object obj) = do
+    parseJSON (Object obj') = do
+        let obj = HM.fromList $ map (first T.toLower) $ HM.toList obj'
         fls <- obj .: "files"
         let eid' = T.pack $ concat $ map (flip showHex "") $ B.unpack $ hash $
                    BC.pack $ unlines $ map (^.location) fls
@@ -126,8 +132,9 @@ instance FromJSON (Experiment a) where
                        obj .:? "celltype" .!= "" <*>
                        obj .: "target" <*>
                        return fls <*>
-                       obj .:? "experimentInfo" .!= M.empty <*>
-                       obj .:? "control"
+                       obj .:? "experimentinfo" .!= M.empty <*>
+                       obj .:? "control" <*>
+                       obj .:? "group"
 
 expOpt :: Options
 expOpt = defaultOptions{fieldLabelModifier=f}
@@ -139,6 +146,7 @@ expOpt = defaultOptions{fieldLabelModifier=f}
         , ("experimentTarget", "target")
         , ("experimentControl", "control")
         , ("experimentFiles", "files")
+        , ("experimentGroup", "group")
         ]
 
 instance ToJSON (Experiment a) where

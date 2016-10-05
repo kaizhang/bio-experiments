@@ -25,9 +25,10 @@ library
     , bytestring
     , cereal
     , cryptohash
+    , containers
     , data-ordlist
     , text
-    , containers
+    , unordered-containers
     , lens
     , yaml
 
