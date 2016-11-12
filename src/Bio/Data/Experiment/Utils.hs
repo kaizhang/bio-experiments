@@ -13,6 +13,7 @@ import           Data.Yaml                 (decodeFile)
 
 import           Bio.Data.Experiment.Types
 
+{-
 -- ^ Merge experiments with same id.
 mergeExp :: [Experiment a] -> [Experiment a]
 mergeExp es = flip map expGroup $ \e -> foldl' combine (head e) $ tail e
@@ -30,10 +31,8 @@ mergeExp es = flip map expGroup $ \e -> foldl' combine (head e) $ tail e
 
 -- ^ Split experiments such that each experiment contains a single file. This
 -- makes it easier for parallel processing. id == mergeExp . splitExp.
-splitExp :: [Experiment a] -> [Experiment a]
+splitExp :: Experiment e => [e] -> [e]
 splitExp es = flip concatMap es $ \e -> zipWith f (repeat e) $ e^.files
   where
     f e x = files .~ [x] $ e
-
-readExp :: FilePath -> IO (Maybe [Experiment a])
-readExp = decodeFile
+          -}

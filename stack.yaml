@@ -4,4 +4,4 @@ packages:
 
 extra-deps: []
 
-resolver: nightly-2016-05-31
+resolver: lts-7.8
