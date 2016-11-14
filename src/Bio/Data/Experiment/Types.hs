@@ -23,7 +23,7 @@ module Bio.Data.Experiment.Types
     , number
     , Experiment(..)
     , NGS(..)
-    , IsDNASeq(..)
+    , IsDNASeq
     , ChIPSeq
     , target
     , control
@@ -35,12 +35,9 @@ module Bio.Data.Experiment.Types
 
 import           Control.Arrow         (first)
 import           Control.Lens          hiding ((.=))
-import           Crypto.Hash.MD5       (hash)
 import           Data.Aeson
 import           Data.Aeson.TH         (defaultOptions, deriveJSON,
                                         fieldLabelModifier)
-import qualified Data.ByteString       as B
-import qualified Data.ByteString.Char8 as BC
 import qualified Data.HashMap.Strict   as HM
 import qualified Data.Map.Strict       as M
 import           Data.Serialize        (Serialize (..))
@@ -48,7 +45,6 @@ import qualified Data.Text             as T
 import qualified Data.Text.Encoding    as T
 import qualified Data.Vector           as V
 import           GHC.Generics          (Generic)
-import           Numeric               (showHex)
 
 instance Serialize T.Text where
     put txt = put $ T.encodeUtf8 txt
@@ -167,10 +163,6 @@ instance FromJSON Replicate where
         Replicate <$> return fls <*>
                       obj .:? "info" .!= M.empty <*>
                       obj .:? "rep" .!= 0
-      where
-        getPath (Single x) = [x^.location]
-        getPath (Pair a b) = [a^.location, b^.location]
-
 
 instance ToJSON Replicate where
     toJSON = genericToJSON defaultOptions{fieldLabelModifier=f}

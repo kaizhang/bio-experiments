@@ -26,7 +26,6 @@ library
     , aeson
     , bytestring
     , cereal
-    , cryptohash
     , containers
     , data-ordlist
     , text
