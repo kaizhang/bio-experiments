@@ -15,6 +15,8 @@ module Bio.Data.Experiment.Types
     , emptyFile
 
     , FileSet(..)
+    , _Single
+    , _Pair
     , single
     , fileA
     , fileB
@@ -125,6 +127,8 @@ instance Serialize File
 data FileSet = Single File
              | Pair File File
              deriving (Show, Read, Eq, Ord, Generic)
+
+makePrisms ''FileSet
 
 single :: FileSet -> Maybe File
 single (Single fl) = Just fl
