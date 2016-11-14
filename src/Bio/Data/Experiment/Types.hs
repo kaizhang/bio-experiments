@@ -15,6 +15,9 @@ module Bio.Data.Experiment.Types
     , emptyFile
 
     , FileSet(..)
+    , single
+    , fileA
+    , fileB
 
     , Replicate
     , emptyReplicate
@@ -122,6 +125,21 @@ instance Serialize File
 data FileSet = Single File
              | Pair File File
              deriving (Show, Read, Eq, Ord, Generic)
+
+single :: FileSet -> Maybe File
+single (Single fl) = Just fl
+single _ = Nothing
+{-# INLINE single #-}
+
+fileA :: FileSet -> Maybe File
+fileA (Pair fl _) = Just fl
+fileA _ = Nothing
+{-# INLINE fileA #-}
+
+fileB :: FileSet -> Maybe File
+fileB (Pair _ fl) = Just fl
+fileB _ = Nothing
+{-# INLINE fileB #-}
 
 instance FromJSON FileSet where
     parseJSON = withObject "FileSet" $ \obj' -> do
