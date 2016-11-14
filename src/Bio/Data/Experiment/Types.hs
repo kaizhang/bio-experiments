@@ -17,9 +17,6 @@ module Bio.Data.Experiment.Types
     , FileSet(..)
     , _Single
     , _Pair
-    , single
-    , fileA
-    , fileB
 
     , Replicate
     , emptyReplicate
@@ -129,21 +126,6 @@ data FileSet = Single File
              deriving (Show, Read, Eq, Ord, Generic)
 
 makePrisms ''FileSet
-
-single :: FileSet -> Maybe File
-single (Single fl) = Just fl
-single _ = Nothing
-{-# INLINE single #-}
-
-fileA :: FileSet -> Maybe File
-fileA (Pair fl _) = Just fl
-fileA _ = Nothing
-{-# INLINE fileA #-}
-
-fileB :: FileSet -> Maybe File
-fileB (Pair _ fl) = Just fl
-fileB _ = Nothing
-{-# INLINE fileB #-}
 
 instance FromJSON FileSet where
     parseJSON = withObject "FileSet" $ \obj' -> do

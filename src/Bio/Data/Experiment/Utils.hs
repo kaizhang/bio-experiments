@@ -17,7 +17,7 @@ mergeExps :: Experiment e => [e] -> [e]
 mergeExps es = map combineExp expGroup
   where
     expGroup = groupBy ((==) `on` (^.eid)) $ sortBy (comparing (^.eid)) es
-    combineExp e = if allEqual (map (^.commonFields) e)
+    combineExp e = if allEqual (map (\x -> (x^.groupName, x^.cellType)) e)
         then replicates .~ mergeReps (concatMap (^.replicates) e) $ head e
         else error "Abort: Found experiments with same id but with different contents"
     allEqual (x:xs) = all (==x) xs
