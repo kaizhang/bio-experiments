@@ -17,7 +17,7 @@ module Bio.Data.Experiment.Types
     , FileSet(..)
 
     , Replicate
-    , rid
+    , emptyReplicate
     , files
     , info
     , number
@@ -85,19 +85,21 @@ guessFormat fl = case () of
     fl' = T.pack fl
 
 data File = File
-    { _location :: !FilePath
-    , _format   :: !FileType
-    , _keywords :: ![T.Text]
+    { fileLocation :: !FilePath
+    , fileFormat   :: !FileType
+    , fileInfo :: !(M.Map T.Text T.Text)
+    , fileKeywords :: ![T.Text]
     } deriving (Show, Read, Eq, Ord, Generic)
-
-makeLenses ''File
 
 emptyFile :: File
 emptyFile = File
-    { _location = ""
-    , _format = Other
-    , _keywords = []
+    { fileLocation = ""
+    , fileFormat = Other
+    , fileInfo = M.empty
+    , fileKeywords = []
     }
+
+makeFields ''File
 
 instance FromJSON File where
     parseJSON = withObject "File" $ \obj' -> do
@@ -105,6 +107,7 @@ instance FromJSON File where
         path <- obj .: "path"
         File <$> return path <*>
                  obj .:? "format" .!= guessFormat path <*>
+                 obj .:? "info" .!= M.empty <*>
                  obj .:? "keywords" .!= []
 
 instance ToJSON File where
@@ -112,9 +115,10 @@ instance ToJSON File where
       where
         f x = M.findWithDefault x x fieldTable
         fieldTable = M.fromList $
-            [ ("_location", "path")
-            , ("_keywords", "keywords")
-            , ("_format", "format")
+            [ ("fileLocation", "path")
+            , ("fileKeywords", "keywords")
+            , ("fileFormat", "format")
+            , ("fileInfo", "info")
             ]
 
 instance Serialize File
@@ -142,24 +146,27 @@ instance ToJSON FileSet where
 instance Serialize FileSet
 
 data Replicate = Replicate
-    { _rid    :: !T.Text
-    , _files  :: [FileSet]
-    , _info   :: !(M.Map T.Text T.Text)
-    , _number :: !Int
+    { replicateFiles  :: [FileSet]
+    , replicateInfo   :: !(M.Map T.Text T.Text)
+    , replicateNumber :: !Int
     } deriving (Show, Read, Eq, Ord, Generic)
 
-makeLenses ''Replicate
+emptyReplicate :: Replicate
+emptyReplicate = Replicate
+    { replicateFiles  = []
+    , replicateInfo   = M.empty
+    , replicateNumber = 0
+    }
+
+makeFields ''Replicate
 
 instance FromJSON Replicate where
     parseJSON = withObject "Replicate" $ \obj' -> do
         let obj = HM.fromList $ map (first T.toLower) $ HM.toList obj'
         fls <- obj .: "files"
-        let rid' = T.pack $ concat $ map (flip showHex "") $ B.unpack $ hash $
-                   BC.pack $ unlines $ concatMap getPath fls
-        Replicate <$> obj .:? "id" .!= rid' <*>
-                       return fls <*>
-                       obj .:? "info" .!= M.empty <*>
-                       obj .:? "rep" .!= 0
+        Replicate <$> return fls <*>
+                      obj .:? "info" .!= M.empty <*>
+                      obj .:? "rep" .!= 0
       where
         getPath (Single x) = [x^.location]
         getPath (Pair a b) = [a^.location, b^.location]
@@ -170,10 +177,9 @@ instance ToJSON Replicate where
       where
         f x = M.findWithDefault x x fieldTable
         fieldTable = M.fromList $
-            [ ("_rid", "id")
-            , ("_files", "files")
-            , ("_info", "info")
-            , ("_number", "rep")
+            [ ("replicateFiles", "files")
+            , ("replicateInfo", "info")
+            , ("replicateNumber", "rep")
             ]
 
 instance Serialize Replicate
