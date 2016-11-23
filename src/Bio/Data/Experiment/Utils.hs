@@ -2,11 +2,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Bio.Data.Experiment.Utils where
 
-import           Control.Lens              ((.~), (^.))
+import           Control.Lens              ((.~), (^.), (%~))
 import           Data.Function             (on)
 import           Data.List                 (foldl1', groupBy, sortBy)
 import           Data.List.Ordered         (nubSort)
 import qualified Data.Map.Strict           as M
+import           Data.Maybe                (mapMaybe)
 import           Data.Ord                  (comparing)
 import qualified Data.Text                 as T
 
@@ -22,6 +23,7 @@ mergeExps es = map combineExp expGroup
         else error "Abort: Found experiments with same id but with different contents"
     allEqual (x:xs) = all (==x) xs
     allEqual _ = True
+{-# INLINE mergeExps #-}
 
 -- | Merge replicates with same number.
 mergeReps :: [Replicate] -> [Replicate]
@@ -32,6 +34,22 @@ mergeReps rs = map (foldl1' combineRep) repGroup
         info .~ M.unionWith f (r1^.info) (r2^.info) $ r1
     f a b | a == b = a
           | otherwise = a `T.append` " | " `T.append` b
+{-# INLINE mergeReps #-}
+
+-- | Keep those experiments having specific files.
+filterExpByFile :: Experiment e => (FileSet -> Bool) -> [e] -> [e]
+filterExpByFile f = mapMaybe $ \e ->
+    let e' = replicates %~ filterRepByFile f $ e
+    in if null (e'^.replicates) then Nothing else Just e'
+{-# INLINE filterExpByFile #-}
+
+-- | Keep those experiments having specific files.
+filterRepByFile :: (FileSet -> Bool) -> [Replicate] -> [Replicate]
+filterRepByFile f = mapMaybe $ \r ->
+    let r' = files %~ filter f $ r
+    in if null (r'^.files) then Nothing else Just r'
+{-# INLINE filterRepByFile #-}
+
 
 {-
 -- ^ Split experiments such that each experiment contains a single file. This
