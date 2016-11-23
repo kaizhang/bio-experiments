@@ -17,9 +17,14 @@ data-files:
 library
   hs-source-dirs:      src
   ghc-options: -Wall
+
   exposed-modules:
+    Bio.Data.Experiment.Parser
     Bio.Data.Experiment.Types
     Bio.Data.Experiment.Utils
+
+  other-modules:
+    Bio.Data.Experiment.Types.Internal
 
   build-depends:
       base >= 4.0 && < 5
