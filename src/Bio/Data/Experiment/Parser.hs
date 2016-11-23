@@ -19,6 +19,8 @@ module Bio.Data.Experiment.Parser
     ( parseChIPSeq
     , parseATACSeq
     , parseRNASeq
+    , parseHiC
+    , parseList
     ) where
 
 import           Control.Arrow                      (first)
@@ -96,12 +98,16 @@ parseATACSeq = withObject "ATACSeq" $ \obj' -> do
     ATACSeq <$> parseCommonFields (Object obj') <*>
                 obj .:? "pairedend" .!= False
 
-
 parseRNASeq :: Value -> Parser RNASeq
 parseRNASeq = withObject "RNASeq" $ \obj' -> do
     let obj = toLowerKey obj'
     RNASeq <$> parseCommonFields (Object obj') <*>
                 obj .:? "pairedend" .!= False
+
+parseHiC :: Value -> Parser HiC
+parseHiC = withObject "HiC" $ \obj' -> do
+    let obj = toLowerKey obj'
+    HiC <$> parseCommonFields (Object obj')
 
 
 --------------------------------------------------------------------------------

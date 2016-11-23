@@ -26,6 +26,7 @@ module Bio.Data.Experiment.Types
     , Experiment(..)
     , NGS(..)
     , IsDNASeq
+
     , ChIPSeq
     , target
     , control
@@ -33,6 +34,7 @@ module Bio.Data.Experiment.Types
 
     , ATACSeq
     , RNASeq
+    , HiC
     ) where
 
 import Bio.Data.Experiment.Types.Internal

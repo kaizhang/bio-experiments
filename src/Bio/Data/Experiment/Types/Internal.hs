@@ -8,18 +8,13 @@
 
 module Bio.Data.Experiment.Types.Internal where
 
-import           Control.Arrow         (first)
-import           Control.Lens          hiding ((.=))
-import           Data.Aeson
-import           Data.Aeson.TH         (defaultOptions, deriveJSON,
-                                        fieldLabelModifier)
-import qualified Data.HashMap.Strict   as HM
-import qualified Data.Map.Strict       as M
-import           Data.Serialize        (Serialize (..))
-import qualified Data.Text             as T
-import qualified Data.Text.Encoding    as T
-import qualified Data.Vector           as V
-import           GHC.Generics          (Generic)
+import           Control.Lens       hiding ((.=))
+import           Data.Aeson.TH      (defaultOptions, deriveJSON)
+import qualified Data.Map.Strict    as M
+import           Data.Serialize     (Serialize (..))
+import qualified Data.Text          as T
+import qualified Data.Text.Encoding as T
+import           GHC.Generics       (Generic)
 
 instance Serialize T.Text where
     put txt = put $ T.encodeUtf8 txt
@@ -44,7 +39,7 @@ instance Serialize FileType
 data File = File
     { fileLocation :: !FilePath
     , fileFormat   :: !FileType
-    , fileInfo :: !(M.Map T.Text T.Text)
+    , fileInfo     :: !(M.Map T.Text T.Text)
     , fileKeywords :: ![T.Text]
     } deriving (Show, Read, Eq, Ord, Generic)
 
@@ -195,6 +190,23 @@ instance NGS RNASeq where
 
 instance Serialize RNASeq
 
+
+data HiC = HiC
+    { hicCommon :: CommonFields
+    } deriving (Show, Read, Eq, Ord, Generic)
+
+deriveJSON defaultOptions ''HiC
+
+instance Experiment HiC where
+    commonFields f e = (\x -> e{hicCommon = x}) <$> f (hicCommon e)
+
+instance NGS HiC where
+    pairedEnd _ = True
+
+instance Serialize HiC
+
+
 class IsDNASeq a
 instance IsDNASeq ChIPSeq
 instance IsDNASeq ATACSeq
+instance IsDNASeq HiC
