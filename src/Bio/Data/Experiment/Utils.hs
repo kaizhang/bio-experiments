@@ -36,6 +36,17 @@ mergeReps rs = map (foldl1' combineRep) repGroup
           | otherwise = a `T.append` " | " `T.append` b
 {-# INLINE mergeReps #-}
 
+filterExp :: Experiment e
+          => (Replicate -> Bool)   -- ^ first fiter by replicates
+          -> (FileSet -> Bool)     -- ^ then filter by files
+          -> [e] -> [e]
+filterExp f g = mapMaybe $ \e ->
+    let rs = flip mapMaybe (filter f $ e^.replicates) $ \r ->
+            let fls = filter g $ r^.files
+            in if null fls then Nothing else Just $ files .~ fls $ r
+    in if null rs then Nothing else Just $ replicates .~ rs $ e
+{-# INLINE filterExp #-}
+
 -- | Keep those experiments having specific files.
 filterExpByFile :: Experiment e => (FileSet -> Bool) -> [e] -> [e]
 filterExpByFile f = mapMaybe $ \e ->
