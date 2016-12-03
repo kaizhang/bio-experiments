@@ -40,7 +40,7 @@ data File = File
     { fileLocation :: !FilePath
     , fileFormat   :: !FileType
     , fileInfo     :: !(M.Map T.Text T.Text)
-    , fileKeywords :: ![T.Text]
+    , fileTags :: ![T.Text]
     } deriving (Show, Read, Eq, Ord, Generic)
 
 makeFields ''File
@@ -52,7 +52,7 @@ emptyFile = File
     { fileLocation = ""
     , fileFormat = Other
     , fileInfo = M.empty
-    , fileKeywords = []
+    , fileTags = []
     }
 
 

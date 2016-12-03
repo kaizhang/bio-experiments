@@ -11,7 +11,7 @@ module Bio.Data.Experiment.Types
     , File
     , location
     , format
-    , keywords
+    , tags
     , emptyFile
 
     , FileSet(..)

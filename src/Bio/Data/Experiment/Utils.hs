@@ -13,6 +13,20 @@ import qualified Data.Text                 as T
 
 import           Bio.Data.Experiment.Types
 
+formatIs :: FileType -> FileSet -> Bool
+formatIs t (Single f) = f^.format == t
+formatIs t (Pair f1 f2) = f1^.format == t && f2^.format == t
+{-# INLINE formatIs #-}
+
+-- | Split a single experiment into multiple experiments, each containing a
+-- fileset.
+splitExpByFile :: Experiment e => e -> [e]
+splitExpByFile e = zipWith (\x y -> replicates .~ [x] $ y)
+    (concatMap f $ e^.replicates) $ repeat e
+  where
+    f r = zipWith (\x y -> files .~ [x] $ y) (r^.files) $ repeat r
+{-# INLINE splitExpByFile #-}
+
 -- | Merge experiments with same id.
 mergeExps :: Experiment e => [e] -> [e]
 mergeExps es = map combineExp expGroup
@@ -36,6 +50,7 @@ mergeReps rs = map (foldl1' combineRep) repGroup
           | otherwise = a `T.append` " | " `T.append` b
 {-# INLINE mergeReps #-}
 
+-- | Keep Experiments, Replicates and FileSets that satisfy the predicate.
 filterExp :: Experiment e
           => (Replicate -> Bool)   -- ^ first fiter by replicates
           -> (FileSet -> Bool)     -- ^ then filter by files
@@ -60,13 +75,3 @@ filterRepByFile f = mapMaybe $ \r ->
     let r' = files %~ filter f $ r
     in if null (r'^.files) then Nothing else Just r'
 {-# INLINE filterRepByFile #-}
-
-
-{-
--- ^ Split experiments such that each experiment contains a single file. This
--- makes it easier for parallel processing. id == mergeExp . splitExp.
-splitExp :: Experiment e => [e] -> [e]
-splitExp es = flip concatMap es $ \e -> zipWith f (repeat e) $ e^.files
-  where
-    f e x = files .~ [x] $ e
-    -}

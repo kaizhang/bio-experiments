@@ -42,7 +42,7 @@ parseFile = withObject "File" $ \obj' -> do
     File <$> return path <*>
              obj .:? "format" .!= guessFormat path <*>
              obj .:? "info" .!= M.empty <*>
-             obj .:? "keywords" .!= []
+             obj .:? "tags" .!= []
 
 guessFormat :: FilePath -> FileType
 guessFormat fl = case () of
