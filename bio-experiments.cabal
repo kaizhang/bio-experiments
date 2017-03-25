@@ -21,10 +21,8 @@ library
   exposed-modules:
     Bio.Data.Experiment.Parser
     Bio.Data.Experiment.Types
-    Bio.Data.Experiment.Utils
-
-  other-modules:
     Bio.Data.Experiment.Types.Internal
+    Bio.Data.Experiment.Utils
 
   build-depends:
       base >= 4.0 && < 5
